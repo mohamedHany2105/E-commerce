@@ -68,3 +68,17 @@ export const deleteProduct = async (req, res, next) => {
     next(error);
   }
 };
+export const deleteAll = async (req, res, next) => {
+  try {
+    const product = await Product.deleteMany({});
+    if (!product) {
+      return next(errorHandler(400, "Product Not Found"));
+    }
+    res.status(200).json({
+      message: "deleted successfully",
+      product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

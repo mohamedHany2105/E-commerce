@@ -1,17 +1,45 @@
-import Router from 'express'
+import Router from "express";
 
-import {create,getAllProducts,getOneProduct,update,deleteProduct} from 
-'../controller/proudct.controller.js'
+import {
+  create,
+  getAllProducts,
+  getOneProduct,
+  update,
+  deleteProduct,
+  deleteAll,
+} from "../controller/proudct.controller.js";
+import { verifyToken } from "../utils/verifyToken.js";
+const productRouter = Router();
 
-const productRouter=Router();
-
-productRouter.post('/create',create)
-productRouter.get('/',getAllProducts)
-productRouter.get('/:id',getOneProduct)
-productRouter.post('/update/:id',update)
-productRouter.delete('/delete/:id',deleteProduct)
-
- 
-
+productRouter.post(
+  "/create",
+  // verifyToken,
+  create
+);
+productRouter.get(
+  "/",
+  // verifyToken,
+  getAllProducts
+);
+productRouter.get(
+  "/:id",
+  // verifyToken,
+  getOneProduct
+);
+productRouter.post(
+  "/update/:id",
+  // verifyToken,
+  update
+);
+productRouter.delete(
+  "/delete/:id",
+  // ,verifyToken,
+  deleteProduct
+);
+productRouter.delete(
+  "/delete",
+  // verifyToken,
+  deleteAll
+);
 
 export default productRouter;

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
+  console.log(currentUser)
   return (
     <div className="w-full flex gap-10 justify-between items-center text-white bg-gray-800">
       <div className=" text-2xl p-3 ">
@@ -36,7 +37,7 @@ export default function Header() {
               <img
                 src={currentUser.user.profile_image}
                 className="rounded-full h-7 w-7 object-cover "
-                alt="sfd"
+                alt={currentUser.user.name}
               />
             </Link>
           </li> ) 

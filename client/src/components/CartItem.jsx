@@ -6,11 +6,11 @@ export default function CartItem({product}) {
         <div>
             <img src={product.profile_image} alt={product.name} />
         </div>
-        <div className='flex '>
+        <div className='flex flex-col '>
             <p>{product.name}</p>
             <p>{product.price} L.E.</p>
-            <p>{product.discount} L.E.</p>
-            <p>{product.description} L.E.</p>
+            <p>{product.discount} </p>
+            {/* <p>{product.description} .</p> */}
 
         </div>
       
