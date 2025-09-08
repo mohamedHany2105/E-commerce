@@ -33,7 +33,7 @@ productRouter.post(
 );
 productRouter.delete(
   "/delete/:id",
-  // ,verifyToken,
+  // verifyToken,
   deleteProduct
 );
 productRouter.delete(

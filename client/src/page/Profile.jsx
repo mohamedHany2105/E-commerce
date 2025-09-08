@@ -26,8 +26,8 @@ export default function Profile() {
   };
   console.log(currentUser);
   console.log(currentUser.user._id);
-  console.log(currentUser.user.profile_image);
-  console.log(formData);
+  console.log(" the image from current user", currentUser.user.profile_image);
+  // console.log(formData);
   const handleSubmition = async (e) => {
     e.preventDefault();
     try {
@@ -87,14 +87,16 @@ export default function Profile() {
       reader.readAsDataURL(selectedFile);
     }
   };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) return;
-    const filename = `${Date.now()}-${file.name}`;
+    const filename = `Profile_image-${Date.now()}-${file.name}`;
+    // send the image to supabase
     const { data, error } = await supabase.storage
       .from("img")
       .upload(filename, file);
-    console.log(data);
+    console.log("this is the Data in handleFile upload  ", data);
     if (error) {
       console.log(error);
       return;
@@ -104,10 +106,16 @@ export default function Profile() {
       .from("img")
       .getPublicUrl(filename);
     // Add the image URL to formData
-    setFormData((prev) => ({
+    // console.log("the public url",urlData.publicUrl)
+    // console.log("form data profile image __________________________",formData.user.profile_image)
+       setFormData((prev) => ({
       ...prev,
-      img_profile: urlData.publicUrl,
+      user: {
+        ...prev.user,
+        profile_image: urlData.publicUrl,
+      },
     }));
+    console.log("the correctede",formData.user.profile_image)
   };
   return (
     <div className="flex flex-col gap-10">
@@ -132,7 +140,7 @@ export default function Profile() {
         <img
           id="img_profile"
           onClick={() => fileRef.current.click()}
-          src={imgPreview || "/default-profile.png"}
+          src={imgPreview||currentUser.user.profile_image}
           alt={currentUser.user.name}
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
         />

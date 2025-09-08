@@ -1,39 +1,39 @@
 import React from "react";
 import { useState } from "react";
+import { supabase } from "../supabase";
 
 export default function UpdateProduct() {
-  const [fromData, setFormData] = useState({});
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    setFormData({ ...fromData, [e.target.id]: e.target.value });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
-  console.log(fromData.id);
-  console.log(fromData);
+  console.log(formData.id);
+  console.log(formData);
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       const res = await fetch(
-        `http://localhost:3000/api/product/update/${fromData.id}`,
+        `http://localhost:3000/api/product/update/${formData.id}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(fromData),
+          body: JSON.stringify(formData),
         }
       );
-
       const data = await res.json();
-
       if (data.success === false) {
-        setLoading(false);
         setError(data.message);
+      } else {
+        setError(null);
       }
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setError(error);
+      setError(error.message || error);
     }
   };
   const handleDelete = async (e) => {
@@ -41,24 +41,22 @@ export default function UpdateProduct() {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://localhost:3000/api/product/delete/${fromData.id}`,
+        `http://localhost:3000/api/product/delete/${formData.id}`,
         {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(),
+          headers: { "Content-Type": "application/json" }
         }
       );
-
       const data = await res.json();
-
       if (data.success === false) {
-        setLoading(false);
         setError(data.message);
+      } else {
+        setError(null);
       }
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setError(error);
+      setError(error.message || error);
     }
   };
   const handleDeleteAll = async (e) => {
@@ -67,37 +65,70 @@ export default function UpdateProduct() {
       setLoading(true);
       const res = await fetch("http://localhost:3000/api/product/delete", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(),
+        headers: { "Content-Type": "application/json" }
       });
-
       const data = await res.json();
-
       if (data.success === false) {
-        setLoading(false);
         setError(data.message);
+      } else {
+        setError(null);
       }
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setError(error);
+      setError(error.message || error);
     }
+  };
+  const handleDeleteImage = (idx) => {
+    setFormData((prev) => ({
+      ...prev,
+      product_image: prev.product_image.filter((_, i) => i !== idx),
+    }));
+  };
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    try {
+      const urls = [];
+      for (const file of files) {
+        const url = await storeImage(file);
+        if (url) urls.push(url);
+      }
+      setFormData((prev) => ({
+        ...prev,
+        product_image: prev.product_image
+          ? [...prev.product_image, ...urls]
+          : urls,
+      }));
+      console.log("this is image urls", urls);
+    } catch (error) {
+      setError(error.message || error);
+    }
+  };
+  const storeImage = async (file) => {
+    const fileName = `product_Image-${file.name}-${Date.now()}`;
+    if (file) {
+      const { data, error } = await supabase.storage
+        .from("product")
+        .upload(fileName, file);
+      if (error) {
+        setError(error.message || error);
+        return null;
+      }
+      const { data: urlData } = supabase.storage
+        .from("product")
+        .getPublicUrl(fileName);
+      return urlData.publicUrl;
+    }
+    return null;
   };
   return (
     <div className="w-full flex flex-col items-center p-8">
-      <h1 className="text-5xl mb-8 text-center">Update Product</h1>
+  <h1 className="text-5xl mb-8 text-center">Update Product</h1>
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8 flex flex-col gap-6"
       >
         <div className="flex flex-col gap-4">
-          <input
-            className="p-3 text-green-700 rounded-xl bg-gray-200"
-            type="text"
-            placeholder="PRODUCT ID"
-            id="id"
-            onChange={handleChange}
-          />
           <input
             className="p-3 text-gray-700 rounded-xl bg-gray-100"
             type="text"
@@ -133,43 +164,73 @@ export default function UpdateProduct() {
           <label htmlFor="images" className="text-gray-700">
             Product Images
           </label>
-          <input
-            type="file"
-            id="images"
-            name="images"
-            multiple
-            className="p-2"
-          />
+          <div className="flex gap-4 items-center">
+            <input
+              type="file"
+              id="images"
+              name="images"
+              multiple
+              className="p-2"
+              onChange={handleFileChange}
+              accept="image/*"
+            />
+            <button
+              type="button"
+              className="border border-green-600 text-green-600 px-4 py-2 rounded hover:bg-green-50"
+              onClick={() => document.getElementById("images").click()}
+            >
+              UPLOAD
+            </button>
+          </div>
+          {/* Image previews with delete buttons */}
+          {Array.isArray(formData.product_image) &&
+            formData.product_image.length > 0 && (
+              <div className="flex flex-col gap-4 mt-4">
+                {formData.product_image.map((img, idx) => (
+                  <div key={idx} className="flex items-center gap-4">
+                    <img
+                      src={img}
+                      alt={`product-${idx}`}
+                      className="h-16 w-16 object-cover rounded bg-gray-400"
+                    />
+                    <button
+                      type="button"
+                      className="text-red-600 border border-red-600 px-4 py-2 rounded hover:bg-red-50"
+                      onClick={() => handleDeleteImage(idx)}
+                    >
+                      DELETE
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
-        <button className="p-3 rounded-2xl bg-green-500 text-white text-xl mx-auto w-full mt-4">
+        <button
+          type="submit"
+          className="p-3 rounded-2xl bg-green-500 text-white text-xl mx-auto w-full mt-4"
+        >
           {loading ? "Loading ..." : "Update Product"}
         </button>
         <button
+          type="button"
           onClick={handleDelete}
           className="p-3 rounded-2xl bg-red-500 text-white text-xl mx-auto w-full mt-4"
         >
           {loading ? "Loading ..." : "Delete Product"}
         </button>
         <button
+          type="button"
           onClick={handleDeleteAll}
-          className="p-3 rounded-2xl bg-red-900 text-white text-xl mx-auto w-full mt-4"
+          className="p-3 rounded-2xl bg-red-700 text-white text-xl mx-auto w-full mt-4"
         >
           {loading ? "Loading ..." : "Delete All Products"}
         </button>
         {error && (
-          <p className="text-xl text-red-900 text-center mt-2">
-            {error.message}
+          <p className="text-xl text-red-500 text-center mt-2">
+            {typeof error === "string" ? error : error.message}
           </p>
         )}
       </form>
-  
-<p className="  text-xl m-4">
-  or
-</p>
-    
-      <button className="p-3 rounded-2xl bg-gray-500 w-[30%] text-white text-xl mx-auto  mt-4">
-        {loading ? "Loading ..." : "Create Product"}
-      </button>
     </div>
   );
 }

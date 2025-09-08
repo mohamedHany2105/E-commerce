@@ -23,7 +23,7 @@ export const signIn = async (req, res, next) => {
     const token = jwt.sign({ id: user._id }, JWT_SECRET);
     // Remove password from user object
     const { password: pwd, ...userData } = user._doc ? user._doc : user;
-    res.cookie("access_token", token, { httpOnly: true }).status(200).json({
+    res.cookie("access_token", token, { httpOnly: true ,signed:true},).status(200).json({
       user: userData,
       message: "User signed in successfully",
     });
